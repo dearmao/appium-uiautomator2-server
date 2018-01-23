@@ -6,7 +6,6 @@ import android.support.test.uiautomator.Configurator;
 import android.view.accessibility.AccessibilityEvent;
 
 import io.appium.uiautomator2.model.AppiumUiAutomatorDriver;
-import io.appium.uiautomator2.utils.Logger;
 
 public abstract class EventRegister {
 
@@ -36,7 +35,6 @@ public abstract class EventRegister {
                     event.getItemCount()
             );
         }
-        Logger.error("!!!! did not get event after waiting for " + Configurator.getInstance().getScrollAcknowledgmentTimeout() + " timeout");
         return runnable.getResult();
     }
 }
