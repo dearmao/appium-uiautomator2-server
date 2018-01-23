@@ -1,0 +1,42 @@
+package io.appium.uiautomator2.core;
+
+
+import android.app.UiAutomation;
+import android.support.test.uiautomator.Configurator;
+import android.view.accessibility.AccessibilityEvent;
+
+import io.appium.uiautomator2.model.AppiumUiAutomatorDriver;
+import io.appium.uiautomator2.utils.Logger;
+
+public abstract class EventRegister {
+
+    public static Boolean runAndRegisterScrollEvents (ReturningRunnable<Boolean> runnable) {
+        AccessibilityEvent event = null;
+        UiAutomation.AccessibilityEventFilter eventFilter = new UiAutomation.AccessibilityEventFilter() {
+            @Override
+            public boolean accept(AccessibilityEvent event) {
+                return event.getEventType() == AccessibilityEvent.TYPE_VIEW_SCROLLED;
+            }
+        };
+
+        try {
+            //wait for AccessibilityEvent filter
+            event = UiAutomatorBridge.getInstance().getUiAutomation().executeAndWaitForEvent(runnable,
+                    eventFilter, Configurator.getInstance().getScrollAcknowledgmentTimeout());
+        } catch (Exception ignore) {}
+
+        if (event != null) {
+            AppiumUiAutomatorDriver.getInstance().getSession().setLastScrollData(
+                    event.getScrollX(),
+                    event.getMaxScrollX(),
+                    event.getScrollY(),
+                    event.getMaxScrollY(),
+                    event.getFromIndex(),
+                    event.getToIndex(),
+                    event.getItemCount()
+            );
+        }
+        Logger.error("!!!! did not get event after waiting for " + Configurator.getInstance().getScrollAcknowledgmentTimeout() + " timeout");
+        return runnable.getResult();
+    }
+}
