@@ -12,7 +12,7 @@ public class Session {
     private String sessionId;
     private ConcurrentMap<String, JSONObject> commandConfiguration;
     private KnownElements knownElements;
-    private Map<String, Integer> lastScrollData = new HashMap<>();
+    private AccessibilityScrollData lastScrollData = new AccessibilityScrollData();
     public static Map<String, Object> capabilities = new HashMap<>();
 
     public Session(String sessionId) {
@@ -44,16 +44,15 @@ public class Session {
 
     public void setLastScrollData(int scrollX, int maxScrollX, int scrollY, int maxScrollY,
                                   int fromIndex, int toIndex, int itemCount) {
-        lastScrollData.put("scrollX", scrollX);
-        lastScrollData.put("maxScrollX", maxScrollX);
-        lastScrollData.put("scrollY", scrollY);
-        lastScrollData.put("maxScrollY", maxScrollY);
-        lastScrollData.put("fromIndex", fromIndex);
-        lastScrollData.put("toIndex", toIndex);
-        lastScrollData.put("itemCount", itemCount);
+        lastScrollData = new AccessibilityScrollData(scrollX, maxScrollX, scrollY, maxScrollY,
+                fromIndex, toIndex, itemCount);
+    }
+
+    public void clearLastScrollData() {
+        lastScrollData.clearScrollData();
     }
 
     public Map<String, Integer> getLastScrollData() {
-        return lastScrollData;
+        return lastScrollData.getAsMap();
     }
 }

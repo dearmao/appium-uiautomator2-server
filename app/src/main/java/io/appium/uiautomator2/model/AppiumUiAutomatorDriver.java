@@ -27,7 +27,7 @@ public class AppiumUiAutomatorDriver {
         return session;
     }
 
-    public static AppiumUiAutomatorDriver getInstance() {
+    public static synchronized AppiumUiAutomatorDriver getInstance() {
         if (instance == null) {
             instance = new AppiumUiAutomatorDriver();
         }
