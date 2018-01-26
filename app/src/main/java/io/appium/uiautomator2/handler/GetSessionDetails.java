@@ -8,6 +8,7 @@ import java.util.HashMap;
 import io.appium.uiautomator2.handler.request.SafeRequestHandler;
 import io.appium.uiautomator2.http.AppiumResponse;
 import io.appium.uiautomator2.http.IHttpRequest;
+import io.appium.uiautomator2.model.AccessibilityScrollData;
 import io.appium.uiautomator2.model.AppiumUiAutomatorDriver;
 import io.appium.uiautomator2.server.WDStatus;
 import io.appium.uiautomator2.utils.Logger;
@@ -22,7 +23,14 @@ public class GetSessionDetails extends SafeRequestHandler {
         public AppiumResponse safeHandle(IHttpRequest request) {
             try {
                 JSONObject result = new JSONObject();
-                JSONObject lastScrollData = new JSONObject(AppiumUiAutomatorDriver.getInstance().getSession().getLastScrollData());
+                AccessibilityScrollData scrollData = AppiumUiAutomatorDriver.getInstance().getSession().getLastScrollData();
+                HashMap<String, Integer> scrollDataMap;
+                if (scrollData == null) {
+                    scrollDataMap = null;
+                } else {
+                    scrollDataMap = scrollData.getAsMap();
+                }
+                JSONObject lastScrollData = new JSONObject(scrollDataMap);
                 result.put("lastScrollData", lastScrollData);
                 return new AppiumResponse(getSessionId(request), WDStatus.SUCCESS, result);
             } catch (JSONException e) {

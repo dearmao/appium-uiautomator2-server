@@ -1,10 +1,11 @@
 package io.appium.uiautomator2.model;
 
+import android.view.accessibility.AccessibilityEvent;
+
 import java.util.HashMap;
 
 public class AccessibilityScrollData {
 
-    private boolean hasData;
     private int scrollX;
     private int maxScrollX;
     private int scrollY;
@@ -13,32 +14,19 @@ public class AccessibilityScrollData {
     private int toIndex;
     private int itemCount;
 
-    public AccessibilityScrollData(int scrollX, int maxScrollX, int scrollY, int maxScrollY,
-                                   int fromIndex, int toIndex, int itemCount) {
-        this.scrollX = scrollX;
-        this.scrollY = scrollY;
-        this.maxScrollX = maxScrollX;
-        this.maxScrollY = maxScrollY;
-        this.fromIndex = fromIndex;
-        this.toIndex = toIndex;
-        this.itemCount = itemCount;
-        this.hasData = true;
+    public AccessibilityScrollData(AccessibilityEvent event) {
+        this.scrollX = event.getScrollX();
+        this.scrollY = event.getScrollY();
+        this.maxScrollX = event.getMaxScrollX();
+        this.maxScrollY = event.getMaxScrollY();
+        this.fromIndex = event.getFromIndex();
+        this.toIndex = event.getToIndex();
+        this.itemCount = event.getItemCount();
     }
 
-    public AccessibilityScrollData() {
-        clearScrollData();
-    }
-
-    public void clearScrollData() {
-        this.hasData = false;
-    }
 
     public HashMap<String, Integer> getAsMap () {
         HashMap<String, Integer> map = new HashMap<>();
-
-        if (!hasData) {
-            return map;
-        }
 
         map.put("scrollX", scrollX);
         map.put("maxScrollX", maxScrollX);

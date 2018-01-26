@@ -7,6 +7,7 @@ import android.view.accessibility.AccessibilityEvent;
 
 import java.util.concurrent.TimeoutException;
 
+import io.appium.uiautomator2.model.AccessibilityScrollData;
 import io.appium.uiautomator2.model.AppiumUiAutomatorDriver;
 import io.appium.uiautomator2.model.Session;
 import io.appium.uiautomator2.utils.Logger;
@@ -33,17 +34,9 @@ public abstract class EventRegister {
         Session session = AppiumUiAutomatorDriver.getInstance().getSession();
 
         if (event == null) {
-            session.clearLastScrollData();
+            session.setLastScrollData(null);
         } else {
-            AppiumUiAutomatorDriver.getInstance().getSession().setLastScrollData(
-                    event.getScrollX(),
-                    event.getMaxScrollX(),
-                    event.getScrollY(),
-                    event.getMaxScrollY(),
-                    event.getFromIndex(),
-                    event.getToIndex(),
-                    event.getItemCount()
-            );
+            session.setLastScrollData(new AccessibilityScrollData(event));
         }
         return runnable.getResult();
     }
