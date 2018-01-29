@@ -43,7 +43,7 @@ public class GetElementAttribute extends SafeRequestHandler {
     // last scroll data used in getting the 'contentSize' attribute.
     // TODO see whether anchoring these to time and screen size is more reliable across devices
     private static int MINI_SWIPE_STEPS = 10;
-    private static int MINI_SWIPE_PIXELS = 600;
+    private static int MINI_SWIPE_PIXELS = 200;
 
     public GetElementAttribute(String mappedUri) {
         super(mappedUri);
@@ -115,26 +115,22 @@ public class GetElementAttribute extends SafeRequestHandler {
         if (y2 < 0) {
             y2 = 0;
         }
-        int tries = 0;
 
         Session session = AppiumUiAutomatorDriver.getInstance().getSession();
         AccessibilityScrollData lastScrollData = null;
-
-        // generating scrolldata is flakey and doesn't always work, so try a number of times
-        while (tries < 10 && lastScrollData == null) {
-            tries += 1;
-            Logger.debug("Doing a mini swipe-and-back in the scrollable view to generate scroll data (try " + tries + ")");
-            swipe(x1, y1, x2, y2);
+        Logger.debug("Doing a mini swipe-and-back in the scrollable view to generate scroll data");
+        swipe(x1, y1, x2, y2);
+        lastScrollData = session.getLastScrollData();
+        if (lastScrollData == null) {
+            // if we didn't get scroll data from the down swipe, try to get it from the up swipe
+            swipe(x2, y2, x1, y1);
             lastScrollData = session.getLastScrollData();
-            if (lastScrollData == null) {
-                // if we didn't get scroll data from the down swipe, try to get it from the up swipe
-                swipe(x2, y2, x1, y1);
-                lastScrollData = session.getLastScrollData();
-            } else {
-                // otherwise just do a reset swipe without worrying about scroll data
-                getUiDevice().swipe(x2, y2, x1, y1, MINI_SWIPE_STEPS);
-            }
+        } else {
+            // otherwise just do a reset swipe without worrying about scroll data, to avoid it
+            // failing because of flakiness
+            getUiDevice().swipe(x2, y2, x1, y1, MINI_SWIPE_STEPS);
         }
+
 
         if (lastScrollData == null) {
             throw new UiAutomator2Exception("Could not retrieve accessibility scroll data; unable to determine scrollable offset");
