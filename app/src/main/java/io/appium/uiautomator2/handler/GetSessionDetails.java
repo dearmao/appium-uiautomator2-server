@@ -18,6 +18,7 @@ public class GetSessionDetails extends SafeRequestHandler {
 
     public GetSessionDetails(String mappedUri) {
         super(mappedUri);
+        session = AppiumUiAutomatorDriver.getInstance().getSession();
     }
 
     @Override

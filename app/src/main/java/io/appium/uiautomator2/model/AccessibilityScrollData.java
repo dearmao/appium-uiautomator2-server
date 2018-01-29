@@ -63,8 +63,5 @@ public class AccessibilityScrollData {
         return toIndex;
     }
 
-    public int getItemCount() {
-        return itemCount;
-    }
-
+    public int getItemCount() { return itemCount; }
 }
