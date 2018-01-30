@@ -2,10 +2,10 @@ package io.appium.uiautomator2.core;
 
 
 import android.app.UiAutomation;
-import android.support.test.uiautomator.Configurator;
 import android.view.accessibility.AccessibilityEvent;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.TimeoutException;
 
 import io.appium.uiautomator2.model.AccessibilityScrollData;
@@ -31,29 +31,16 @@ public abstract class EventRegister {
         // here we set a callback for the accessibility event stream, keeping track of any scroll
         // events we come across
         AccessibilityEvent event = null;
-        final ArrayList<AccessibilityEvent> seenEvents = new ArrayList<>();
+        ArrayList<AccessibilityEvent> events = new ArrayList<>();
+        UiAutomation.AccessibilityEventFilter filter = new EventCollectingPredicate(AccessibilityEvent.TYPE_VIEW_SCROLLED, events);
         UiAutomation automation = UiAutomatorBridge.getInstance().getUiAutomation();
-        UiAutomation.OnAccessibilityEventListener onEvent = new UiAutomation.OnAccessibilityEventListener() {
-            @Override
-            public void onAccessibilityEvent(AccessibilityEvent accessibilityEvent) {
-                if (accessibilityEvent.getEventType() == AccessibilityEvent.TYPE_VIEW_SCROLLED) {
-                    seenEvents.add(accessibilityEvent);
-                }
-            }
-        };
-        automation.setOnAccessibilityEventListener(onEvent);
-
-        // actually run the swipe/scroll
-        runnable.run();
-
-        // wait a certain amount of time for any accessibility events generated to be caught by
-        // our callback, then stop watching for events
-        try { Thread.sleep(timeout); } catch (InterruptedException ign) {}
-        automation.setOnAccessibilityEventListener(null);
+        try {
+            automation.executeAndWaitForEvent(runnable, filter, timeout);
+        } catch (TimeoutException ign) {}
 
         // if we have caught any events in our net, snatch the last one
-        if (seenEvents.size() > 0) {
-            event = seenEvents.get(seenEvents.size() - 1); // get the last event we saw
+        if (events.size() > 0) {
+            event = events.get(events.size() - 1);
         }
 
         Session session = AppiumUiAutomatorDriver.getInstance().getSession();
@@ -67,6 +54,11 @@ public abstract class EventRegister {
             session.setLastScrollData(data);
         }
 
+        // ensure we recycle all accessibility events once we no longer need them
+        for (AccessibilityEvent eventToRecycle : events) {
+            eventToRecycle.recycle();
+        }
+
         // turn back on notification listener if it was active
         if (notificationListenerActive) {
             listener.start();
@@ -78,5 +70,26 @@ public abstract class EventRegister {
 
     public static Boolean runAndRegisterScrollEvents (ReturningRunnable<Boolean> runnable) {
         return runAndRegisterScrollEvents(runnable, EVENT_COOLDOWN_MS);
+    }
+
+    // https://android.googlesource.com/platform/frameworks/testing/+/master/uiautomator/library/core-src/com/android/uiautomator/core/InteractionController.java#96
+    static class EventCollectingPredicate implements UiAutomation.AccessibilityEventFilter {
+        int mMask;
+        List<AccessibilityEvent> mEventsList;
+        EventCollectingPredicate(int mask, List<AccessibilityEvent> events) {
+            mMask = mask;
+            mEventsList = events;
+        }
+        @Override
+        public boolean accept(AccessibilityEvent t) {
+            // check current event in the list
+            if ((t.getEventType() & mMask) != 0) {
+                // For the events you need, always store a copy when returning false from
+                // predicates since the original will automatically be recycled after the call.
+                mEventsList.add(AccessibilityEvent.obtain(t));
+            }
+            // get more
+            return false;
+        }
     }
 }
