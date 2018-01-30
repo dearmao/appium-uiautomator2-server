@@ -151,7 +151,7 @@ public class GetElementAttribute extends SafeRequestHandler {
     }
 
     private static int getScrollableOffsetByItemCount (AndroidElement uiScrollable, int itemCount) {
-        Logger.debug("Figuring out scrollableOffset via item count");
+        Logger.debug("Figuring out scrollableOffset via item count of " + itemCount);
         Object scrollObject = uiScrollable.getUiObject();
 
         // here we loop through the children and get their bounds until the height differs, then
@@ -172,15 +172,17 @@ public class GetElementAttribute extends SafeRequestHandler {
 
                 Rect bounds = getElementBoundsInScreen(item);
 
-                itemsPerRow++;
+                ++itemsPerRow;
                 lastExaminedItem = item;
 
                 if (lastExaminedItemY != Integer.MIN_VALUE && bounds.top > lastExaminedItemY) {
-                    numRowsExamined += 1;
+                    ++numRowsExamined;
                     rowHeight = bounds.top - lastExaminedItemY;
                     if (numRowsExamined >= numRowsToExamine) {
                         break;
                     }
+                    // reset itemsPerRow as we examine another row; don't want it to overaccumulate
+                    itemsPerRow = 0;
                 }
 
                 lastExaminedItemY = bounds.top;
@@ -189,11 +191,12 @@ public class GetElementAttribute extends SafeRequestHandler {
             if (lastExaminedItem == null) {
                 throw new UiObjectNotFoundException("Could not find any children of the scrollview to get offset from");
             }
+            Logger.debug("Determined there were " + itemsPerRow + " items per row");
 
             int numRows = (int) Math.floor(itemCount / itemsPerRow);
             if (itemCount % itemsPerRow > 0) {
                 // we might have an additional part-row
-                numRows += 1;
+                ++numRows;
             }
             int totalHeight = numRows * rowHeight;
             Logger.debug("Determined there were " + numRows + " rows of height " +

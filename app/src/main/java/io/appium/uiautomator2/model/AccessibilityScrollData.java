@@ -24,8 +24,11 @@ public class AccessibilityScrollData {
         this.itemCount = event.getItemCount();
     }
 
+    public String toString() {
+        return getAsMap().toString();
+    }
 
-    public HashMap<String, Integer> getAsMap () {
+    public HashMap<String, Integer> getAsMap() {
         HashMap<String, Integer> map = new HashMap<>();
 
         map.put("scrollX", scrollX);

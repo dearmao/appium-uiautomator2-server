@@ -46,7 +46,9 @@ public abstract class EventRegister {
         if (event == null) {
             session.setLastScrollData(null);
         } else {
-            session.setLastScrollData(new AccessibilityScrollData(event));
+            AccessibilityScrollData data = new AccessibilityScrollData(event);
+            Logger.debug("Accessibility event was: ", data);
+            session.setLastScrollData(data);
         }
 
         // turn back on notification listener if it was active
