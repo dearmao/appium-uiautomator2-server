@@ -153,6 +153,7 @@ public class GetElementAttribute extends SafeRequestHandler {
     private static int getScrollableOffsetByItemCount (AndroidElement uiScrollable, int itemCount) {
         Logger.debug("Figuring out scrollableOffset via item count of " + itemCount);
         Object scrollObject = uiScrollable.getUiObject();
+        Rect scrollBounds = getElementBoundsInScreen(uiScrollable);
 
         // here we loop through the children and get their bounds until the height differs, then
         // regardless of whether we have a list or a grid, we'll know the height of an item/row
@@ -170,14 +171,14 @@ public class GetElementAttribute extends SafeRequestHandler {
                     throw new UiObjectNotFoundException("Could not get child of scrollview");
                 }
 
-                Rect bounds = getElementBoundsInScreen(item);
+                Rect itemBounds = getElementBoundsInScreen(item);
 
                 ++itemsPerRow;
                 lastExaminedItem = item;
 
-                if (lastExaminedItemY != Integer.MIN_VALUE && bounds.top > lastExaminedItemY) {
+                if (lastExaminedItemY != Integer.MIN_VALUE && itemBounds.top > lastExaminedItemY) {
                     ++numRowsExamined;
-                    rowHeight = bounds.top - lastExaminedItemY;
+                    rowHeight = itemBounds.top - lastExaminedItemY;
                     if (numRowsExamined >= numRowsToExamine) {
                         break;
                     }
@@ -185,7 +186,7 @@ public class GetElementAttribute extends SafeRequestHandler {
                     itemsPerRow = 0;
                 }
 
-                lastExaminedItemY = bounds.top;
+                lastExaminedItemY = itemBounds.top;
             }
 
             if (lastExaminedItem == null) {
@@ -199,17 +200,18 @@ public class GetElementAttribute extends SafeRequestHandler {
                 ++numRows;
             }
             int totalHeight = numRows * rowHeight;
+            int scrollableOffset = totalHeight - scrollBounds.height();
             Logger.debug("Determined there were " + numRows + " rows of height " +
-                    rowHeight + ", for a total scrollableOffset of " + totalHeight);
-            return totalHeight;
+                    rowHeight + ", for a total height of " + totalHeight + " and scroll offset " +
+                    "of " + scrollableOffset);
+            return scrollableOffset;
         } catch (UiObjectNotFoundException ignore) {
         } catch (InvalidClassException e) {
             Logger.error("Programming error, tried to build a UiObjectChildGenerator with wrong type");
         }
 
-        // there were no child items we could find, so just return the height of the parent
-        Rect bounds = getElementBoundsInScreen(uiScrollable);
-        return bounds.height();
+        // there were no child items we could find, so assume no offset
+        return 0;
     }
 
     private static boolean swipe(final int startX, final int startY, final int endX, final int endY) {
